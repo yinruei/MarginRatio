@@ -137,7 +137,15 @@
     overflow:hidden;
   }
   .table-scroll{ overflow-x:auto; }
-  table{ width:100%; border-collapse:collapse; min-width: 980px; }
+  table{ width:100%; border-collapse:collapse; min-width: 900px; table-layout: fixed; }
+  thead th[data-key="name"], td.stock-name-cell{
+    width: 66px; max-width:66px;
+  }
+  thead th:not([data-key="name"]):not(.rank), td:not(.stock-name-cell):not(.rank){
+    width: auto;
+  }
+  thead th.rank, td.rank{ width:44px; }
+  thead th[data-key="ratio"]{ width:210px; }
   thead th{
     text-align:left; font-size:11px; letter-spacing:0.06em; text-transform:uppercase;
     color:var(--text-faint); font-weight:600; padding: 12px 14px;
@@ -157,8 +165,9 @@
   td{ padding: 10px 14px; font-size:13px; white-space:nowrap; }
   td.num{ font-family:"JetBrains Mono", monospace; text-align:right; }
   .rank{ color:var(--text-faint); font-family:"JetBrains Mono", monospace; font-size:12px; width:40px; }
-  .stock-name{ font-weight:600; color:#fff; }
-  .stock-code{ color:var(--text-faint); font-family:"JetBrains Mono", monospace; font-size:11px; margin-left:6px; }
+  .stock-name{ font-weight:600; color:#fff; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12.5px; }
+  .stock-code{ color:var(--text-faint); font-family:"JetBrains Mono", monospace; font-size:9.5px; display:block; margin-top:2px; }
+  td.stock-name-cell{ white-space:normal; padding-left:10px; padding-right:6px; }
   .up{ color: var(--up); }
   .down{ color: var(--down); }
   .flat{ color: var(--flat); }
@@ -205,6 +214,37 @@
     .header-stats{ display:none; }
     .zones{ grid-template-columns: repeat(2,1fr); }
     h1{ font-size:22px; }
+
+    /* ---- 手機卡片模式：表格轉直式卡片，不需橫向捲動 ---- */
+    .table-scroll{ overflow-x: visible; }
+    table{ min-width:0; width:100%; }
+    thead{ display:none; }
+    tbody, tr, td{ display:block; width:100%; }
+    tbody{ padding: 6px; }
+    tr{
+      background: var(--panel-2);
+      border:1px solid var(--border-soft);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      padding: 12px 14px 10px;
+    }
+    tr:last-child{ margin-bottom:0; }
+    td{
+      display:flex; justify-content:space-between; align-items:center;
+      padding: 5px 0; white-space:normal; font-size:13px;
+      border-bottom: 1px dashed var(--border-soft);
+    }
+    td:last-child{ border-bottom:none; }
+    td::before{
+      content: attr(data-label);
+      color: var(--text-faint); font-size:11px; flex-shrink:0; margin-right:10px;
+    }
+    td.rank{ display:none; }
+    .stock-name-cell{ padding-top:0; border-bottom:1px solid var(--border); margin-bottom:4px; padding-bottom:8px !important; }
+    .stock-name-cell::before{ display:none; content:''; }
+    .stock-name{ font-size:15px; }
+    .ratio-cell{ width:100%; min-width:0; }
+    .gauge{ flex:1; }
   }
 </style>
 </head>
@@ -377,15 +417,15 @@ function render(){
   const body = document.getElementById('tableBody');
   body.innerHTML = rows.map(d=>`
     <tr>
-      <td class="rank">${d.idx}</td>
-      <td><span class="stock-name">${d.name}</span><span class="stock-code">${d.code}</span></td>
-      <td class="num">${fmtNum(d.price,2)}</td>
-      <td class="num ${pctClass(d.chg)}">${pctSign(d.chg,2)}</td>
-      <td>${gaugeHtml(d.ratio)}</td>
-      <td class="num">${fmtInt(d.vol)}</td>
-      <td class="num ${pctClass(d.d5)}">${pctSign(d.d5,2)}</td>
-      <td class="num ${pctClass(d.d10)}">${pctSign(d.d10,2)}</td>
-      <td class="num ${pctClass(d.d20)}">${pctSign(d.d20,2)}</td>
+      <td class="rank" data-label="#">${d.idx}</td>
+      <td class="stock-name-cell" data-label=""><span class="stock-name">${d.name}</span><span class="stock-code">${d.code}</span></td>
+      <td class="num" data-label="成交價">${fmtNum(d.price,2)}</td>
+      <td class="num ${pctClass(d.chg)}" data-label="漲跌">${pctSign(d.chg,2)}</td>
+      <td data-label="融資維持率">${gaugeHtml(d.ratio)}</td>
+      <td class="num" data-label="成交量(張)">${fmtInt(d.vol)}</td>
+      <td class="num ${pctClass(d.d5)}" data-label="近5日%">${pctSign(d.d5,2)}</td>
+      <td class="num ${pctClass(d.d10)}" data-label="近10日%">${pctSign(d.d10,2)}</td>
+      <td class="num ${pctClass(d.d20)}" data-label="近20日%">${pctSign(d.d20,2)}</td>
     </tr>
   `).join('');
 }
